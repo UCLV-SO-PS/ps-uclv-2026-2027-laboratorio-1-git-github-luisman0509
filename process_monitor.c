@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <sys/sysinfo.h>
 
 void mostrar_info_sistema(void) {
     printf("=== Monitor de Procesos del Sistema ===\n");
@@ -15,13 +16,31 @@ void mostrar_info_sistema(void) {
     printf("PID del proceso padre: %ld\n", (long)getppid());
 }
 
-void mostrar_uso_memoria(void) {
+int mostrar_uso_memoria(void) {
+    struct sysinfo info;
+
     printf("--- Información de Memoria ---\n");
-    printf("Funcionalidad de memoria por implementar\n");
+
+    if (sysinfo(&info) != 0) {
+        perror("No se pudo consultar la memoria");
+        return 1;
+    }
+
+    unsigned long long total =
+        (unsigned long long)info.totalram * info.mem_unit;
+    unsigned long long libre =
+        (unsigned long long)info.freeram * info.mem_unit;
+    const unsigned long long mib = 1024ULL * 1024ULL;
+
+    printf("Memoria total: %llu MiB\n", total / mib);
+    printf("Memoria libre: %llu MiB\n", libre / mib);
+    printf("Memoria utilizada (total - libre): %llu MiB\n",
+           (total - libre) / mib);
+
+    return 0;
 }
 
 int main(void) {
     mostrar_info_sistema();
-    mostrar_uso_memoria();
-    return 0;
+    return mostrar_uso_memoria();
 }
